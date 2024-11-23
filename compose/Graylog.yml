@@ -1,0 +1,48 @@
+version: '3.7'
+services:
+  mongo:
+    image: mongo:4.4
+    container_name: graylog-mongo
+    networks:
+      - graylog-network
+    volumes:
+      - graylog_mongo_data:/data/db
+    restart: always
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+    container_name: graylog-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    networks:
+      - graylog-network
+    volumes:
+      - graylog_es_data:/usr/share/elasticsearch/data
+    restart: always
+
+  graylog:
+    image: graylog/graylog:4.3
+    container_name: graylog-server
+    environment:
+      - GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
+    networks:
+      - graylog-network
+    volumes:
+      - graylog_data:/usr/share/graylog/data
+    ports:
+      - "9000:9000"
+      - "12201:12201/udp"
+      - "1514:1514/udp"
+    depends_on:
+      - mongo
+      - elasticsearch
+    restart: always
+
+volumes:
+  graylog_mongo_data:
+  graylog_es_data:
+  graylog_data:
+
+networks:
+  graylog-network:
